@@ -1,0 +1,22 @@
+<flags CXXFLAGS="-g -DDEBUG -Wall -std=c++17" />
+
+<use name="root" />
+
+<use name="TopMass/TopEventTree" />
+<bin name="printExtraJetEvent" file="printExtraJetEvent.cc"/>
+<bin name="fitAssignment" file="fitAssignment.cc"/>
+	<use name="PhysicsTools/KinFitter" />
+<bin name="fitSelectionSmear" file="fitSelectionSmear.cc"/>
+	<use name="PhysicsTools/KinFitter" />
+<bin name="fittest" file="fittest.cc"/>
+<bin name="addExtraJets" file="addExtraJets.cc"/>
+<bin name="makeEventDisplay" file="makeEventDisplay.cc"/>
+<bin name="printExtraJets" file="printExtraJets.cc" />
+<bin name="getEntries" file="getEntries.cc" />
+<bin name="getHistNoLog" file="getHistNoLog.cc" />
+<bin name="getHistograms" file="getHistograms.cc" />
+<bin name="applyRecoSmear" file="applyRecoSmear.cc" />
+<!--<bin name="plotHistograms" file="plotHistograms.cc" />-->
+<bin name="applyTestKinFit" file="applyTestKinFit.cc">
+	<use name="PhysicsTools/KinFitter" />
+</bin>
