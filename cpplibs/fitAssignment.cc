@@ -16,6 +16,7 @@
 #include <map>
 using ROOT::Math::VectorUtil::DeltaR;
 using namespace std;
+
 void tryCombinations(TLorentzVector *B1, TLorentzVector *B2, TLorentzVector *J1, TLorentzVector *J2, TLorentzVector *J3, TLorentzVector *J4, JetEvent *jetevent, TopEvent *topevent, TMatrixD mB1, TMatrixD mB2, TMatrixD mJ1, TMatrixD mJ2, TMatrixD mJ3, TMatrixD mJ4, struct Selection &bestSelection, double dRLimit, TString option) {
 
     applyKinFit({B1, B2, J1, J2, J3, J4}, jetevent, topevent, {mB1, mB2, mJ1, mJ2, mJ3, mJ4}, bestSelection, dRLimit, option);
@@ -25,27 +26,10 @@ void tryCombinations(TLorentzVector *B1, TLorentzVector *B2, TLorentzVector *J1,
     applyKinFit({B1, B2, J2, J4, J1, J3}, jetevent, topevent, {mB1, mB2, mJ2, mJ4, mJ1, mJ3}, bestSelection, dRLimit, option);
     applyKinFit({B1, B2, J2, J3, J1, J4}, jetevent, topevent, {mB1, mB2, mJ2, mJ3, mJ1, mJ4}, bestSelection, dRLimit, option);
 }
+
 void setbestcombi(TString input, TString output, double dRLimit, TString option) {
 
-    auto fIn = TFile::Open(input);
-    auto tIn = dynamic_cast<TTree *>(fIn->Get("analyzeKinFit/eventTree"));
-    if (tIn == nullptr)
-	tIn = dynamic_cast<TTree *>(fIn->Get("eventTree"));
-    auto fOut = TFile::Open(output, "RECREATE");
-    auto tOut = tIn->CloneTree(0);
-    // set branch adress of branch "top" to adress of topevent
-
-    TopEvent *topevent = nullptr;
-    tIn->SetBranchAddress("top.", &topevent);
-    JetEvent *jetevent = nullptr;
-    int N_skipped = 0;
-    tIn->SetBranchAddress("jet.", &jetevent);
-    int N = tIn->GetEntries();
-    // loop over all Events
-    for (int i = 0; i < N; i++) {
-		//cout << "Entry # " << i << "/" << N << endl;
-	tIn->GetEntry(i);
-	struct Selection bestSelection;
+    	struct Selection bestSelection;
 	if (!(topevent->fitChi2.empty()))
 	    bestSelection.chi2 = topevent->fitChi2.front();
 	else
@@ -79,14 +63,6 @@ void setbestcombi(TString input, TString output, double dRLimit, TString option)
 	    }
 	}
 
-	/*	cout << "Previous Chi2:  " << topevent->fitChi2.front();
-	cout << " Previous Selection " << topevent->recoB1.front().Pt() << " "
-	     << topevent->recoB2.front().Pt() << " "
-	     << topevent->recoW1Prod1.front().Pt() << " "
-	     << topevent->recoW1Prod2.front().Pt() << " "
-	     << topevent->recoW2Prod1.front().Pt() << " "
-	     << topevent->recoW2Prod2.front().Pt() << endl;
-		 */
 	// try all 6 physical combinations of jets
 	auto it = btags.begin();
 	TLorentzVector *B1 = it->second;
@@ -125,27 +101,7 @@ void setbestcombi(TString input, TString output, double dRLimit, TString option)
 	if (DeltaR(*B1, *B2) <= 2) {
 	    continue;
 	}
-	/*	
-topevent->recoB1.clear();
-topevent->recoB2.clear();
-topevent->recoW1Prod1.clear();
-topevent->recoW1Prod2.clear();
-topevent->recoW2Prod1.clear();
-topevent->recoW2Prod2.clear();
 
-topevent->fitB1.clear();
-topevent->fitB2.clear();
-topevent->fitW1Prod1.clear();
-topevent->fitW1Prod2.clear();
-topevent->fitW2Prod1.clear();
-topevent->fitW2Prod2.clear();
-
-topevent->fitW1.clear();
-topevent->fitW2.clear();
-topevent->fitTop1.clear();
-topevent->fitTop2.clear();
-topevent->fitTTBar.clear();	
-*/
 	bool skip = false;
 	for (auto je : {B1, B2, J1, J2, J3, J4}) {
 	    if (je->Pt() <= 0) {
@@ -174,24 +130,10 @@ topevent->fitTTBar.clear();
 	tryCombinations(B1, B2, J1, J2, J3, J5, jetevent,  topevent,  mB1,  mB2,  mJ1,  mJ2,  mJ3,  mJ5, bestSelection, dRLimit, option);
 	}
 */	
-		if (!(topevent->recoB1.empty() || topevent->fitW2Prod2.empty() ||
-	    topevent->fitW2Prod1.empty() || topevent->fitW1Prod2.empty() ||
-	    topevent->fitW1Prod1.empty() || topevent->fitB2.empty() ||
-	    topevent->fitB1.empty() || topevent->recoW2Prod2.empty() ||
-	    topevent->recoW2Prod1.empty() || topevent->recoW1Prod2.empty() ||
-	    topevent->recoW1Prod1.empty() || topevent->recoB2.empty())){
-	    
-
-
  vector<TLorentzVector *> genJets;
     vector<TLorentzVector *> Jets;
-	Jets.push_back(&(topevent->recoB1.front()));
-	Jets.push_back(&(topevent->recoB2.front()));
-	Jets.push_back(&(topevent->recoW1Prod1.front()));
-	Jets.push_back(&(topevent->recoW1Prod2.front()));
-	Jets.push_back(&(topevent->recoW2Prod1.front()));
-	Jets.push_back(&(topevent->recoW2Prod2.front()));
-    for (size_t ip = 0; ip < jetevent->genParton.size(); ip++)
+
+   for (size_t ip = 0; ip < jetevent->genParton.size(); ip++)
 	genJets.push_back(&(jetevent->genParton[ip]));
     //check if the selection is correct with gen Information
     topevent->combinationType.clear();
@@ -229,12 +171,6 @@ topevent->fitTTBar.clear();
 	}
 	cout << endl;
 */
-	tOut->Fill();
-    }
-    //	cout << "Skipped Events : " << N_skipped << "/ " << N << endl;
-
-    tOut->Write();
-    fOut->Close();
 }
 int main(int argc, char *argv[]) {
 
