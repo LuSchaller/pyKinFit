@@ -36,55 +36,9 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 
-// structure to fill pull histograms -> inspired by getHistograms
-struct particleHists {
-	
-	// class includes the histograms which should be created and name of particle	
-	TString name;
-	TString prefix;
-	TH1 * et; TH1 * eta; TH1 * phi;
-
-	// default constructor (necessary to initialize array )
-	particleHists():name(""),prefix(""),et(nullptr),eta(nullptr),phi(nullptr){}
-
-	// constructor initializes name and histograms	
-	particleHists( TString Name, TString Prefix): name(Name), prefix(Prefix),
-	et(new TH1F(prefix + name + "Et",";#frac{E_{T}^{reco}-E_{T}^{fit}}{#sigma};N",300,-3,3)),
-	eta(new TH1F(prefix + name + "Eta",";#frac{#eta^{reco}-#eta^{fit}}{#sigma};N",300,-3,3)),
-	phi(new TH1F(prefix + name + "Phi",";#frac{#phi^{reco}-#phi^{fit}}{#sigma};N",300,-3,3))
-	{}
-
-	// fills histograms with according values from a given reco, fit and fiterror
-	void Fill(const TLorentzVector& reco, const TLorentzVector& fit,double siget,double sigeta,double sigphi){
-		// assert(siget > 0);
-		// assert(sigeta > 0);
-		// assert(sigphi > 0);
-		if(!(siget > 0))return;
-		double Etreco = reco.E()*std::fabs(sin(reco.Theta()));
-		double Etfit = fit.E()*std::fabs(sin(fit.Theta()));
-		et->Fill((Etreco-Etfit)/siget);
-		eta->Fill((reco.Eta()-fit.Eta())/sigeta);
-		phi->Fill((reco.Phi()-fit.Phi())/sigphi);
-	}
-
-	// writes the histograms in a given directory
-	void Write(TDirectory * file){
-		TDirectory * dPart = file->mkdir(name);
-		dPart->cd();
-		for (TH1 * h : {et,eta,phi}){
-			TString n = h->GetName();
-			n.ReplaceAll(prefix + name,"");
-			h->SetDirectory(dPart);
-			h->Write(n);		
-		}
-				
-	}
-
-};
-
-
 // function to calculate the covariance matrix of the fit, requires functions
 // definded in config.h
+//
 TMatrixD setupMatrix(const TLorentzVector* object, bool isB){
 	TMatrixD CovM (3,3);
 	CovM.Zero();
@@ -112,110 +66,18 @@ TMatrixD setupMatrix(const TLorentzVector* object1, const TLorentzVector* object
 	return CovM;
 }
 
-// function to Print TLorentzVectors with 3 digit precision
-void PrintTvec(TLorentzVector Tvec){
-	double pt = Tvec.Pt();
-	double eta = Tvec.Eta();
-	double phi = Tvec.Phi();
-	double e = Tvec.E();
-	double m = Tvec.M();
-	cout << "(Pt, eta, phi, E, M) = (" << round(10*pt)/10 << ", " << round(100*eta)/100 << ", " << round(100*phi)/100 << ", " << round(e) << ", " << round(10*m)/10 << ")" << endl;
-}
-
-
-// function printing all TLorentzVectors for one TopEvent (RECO & FIT)
-void PrintTopEvent(TopEvent * topevent){
-	if(topevent->recoB1.empty() || topevent->fitW2Prod2.empty() || topevent->fitW2Prod1.empty() || topevent->fitW1Prod2.empty() || topevent->fitW1Prod1.empty() || topevent->fitB2.empty() || topevent->fitB1.empty() || topevent->recoW2Prod2.empty() || topevent->recoW2Prod1.empty() || topevent->recoW1Prod2.empty() || topevent->recoW1Prod1.empty() || topevent->recoB2.empty()){
-		cout << "Empty Entry." << endl;
-		return;
-	}
-	cout << "RECO:" << endl;
-	cout << "TTBar: ";PrintTvec(topevent->recoTTBar.front());
-	cout << "Top1: ";PrintTvec(topevent->recoTop1.front());
-	cout << "Top2: ";PrintTvec(topevent->recoTop2.front());
-	cout << "W1: ";PrintTvec(topevent->recoW1.front());
-	cout << "W2: ";PrintTvec(topevent->recoW2.front());
-	cout << "B1: ";PrintTvec(topevent->recoB1.front());
-	cout << "B2: ";PrintTvec(topevent->recoB2.front());
-	cout << "W1Prod1: ";PrintTvec(topevent->recoW1Prod1.front());
-	cout << "W1Prod2: " ;PrintTvec(topevent->recoW1Prod2.front());
-	cout << "W2Prod1: ";PrintTvec(topevent->recoW2Prod1.front());
-	cout << "W2Prod2: ";PrintTvec(topevent->recoW2Prod2.front());
-	cout << endl << "FIT:" << endl;	
-	cout << "TTBar: ";PrintTvec(topevent->fitTTBar.front());
-	cout << "Top1: ";PrintTvec(topevent->fitTop1.front());
-	cout << "Top2: ";PrintTvec(topevent->fitTop2.front());
-	cout << "W1: ";PrintTvec(topevent->fitW1.front());
-	cout << "W2: ";PrintTvec(topevent->fitW2.front());
-	cout << "B1: ";PrintTvec(topevent->fitB1.front());
-	cout << "B2: ";PrintTvec(topevent->fitB2.front());
-	cout << "W1Prod1: ";PrintTvec(topevent->fitW1Prod1.front());
-	cout << "W1Prod2: ";PrintTvec(topevent->fitW1Prod2.front());
-	cout << "W2Prod1: ";PrintTvec(topevent->fitW2Prod1.front());
-	cout << "W2Prod2: ";PrintTvec(topevent->fitW2Prod2.front());
-}
-
 
 // Comment on the dataset:
-// - the 4-vectors of each particle i.e recoB1 are saved in a std::vector<TLorentzVector>
-// - usually these vecotrs contain exactly 1 TLorentzVector
-// - BUT some vectors are empty
-// -> Therefor these entries have to be left out, else this causes problems
+// input data will come from columnflow columns
+// as pt,eta,phi for each jet
 
-
-void applyTestKinFit(TString input, TString output, double dRLimit)
+void applyTestKinFit()
 {
 
-// Open TFile and open the correct branch of the TTree
-auto fIn = TFile::Open(input);
-auto tIn = dynamic_cast<TTree*>(fIn->Get("analyzeKinFit/eventTree"));
-if (tIn==nullptr) tIn = dynamic_cast<TTree*>(fIn->Get("eventTree"));
-
-// set branch adress of branch "top" to adress of topevent 
-TopEvent * topevent = nullptr;
-tIn->SetBranchAddress("top.", &topevent);
-JetEvent * jetevent = nullptr;
-tIn->SetBranchAddress("jet.",&jetevent);
-
-auto fOut = TFile::Open(output, "RECREATE"); 
-auto tOut = tIn->CloneTree(0);
-
-// some variables to check fit performance
-int N = tIn->GetEntries(); // total number of entries
-int N_empty = 0; //number of empty entries
-int N_full = 0; //number of not empty entries 
-int N_converged = 0; //number of converged fits
-int n_counter = 0; //counter for the average number of iterations (sum off n_iter for all fits)
-
-// vecotor for the names of partiles
 const vector<TString> v_names={"B1", "B2", "W1Prod1", "W1Prod2", "W2Prod1", "W2Prod2"};
 const int n = v_names.size();
 
-// Histograms for pull-variables p_v:= (v_r-v_f)/sig_{v_f}
-particleHists a_histsPullRefit[n];
-particleHists a_histsPullFit[n];
-// histograms for pull-variables for the correct selection (topevent->combinationType==1)
-particleHists a_histsPullRefitCorr[n];
-particleHists a_histsPullFitCorr[n];
-for( int i = 0; i < n; i++){
-	a_histsPullRefit[i] = particleHists(v_names[i],"Refit");	 
-	a_histsPullFit[i] = particleHists(v_names[i],"Fit");	 
-	a_histsPullRefitCorr[i] = particleHists(v_names[i],"RefitCorr");	 
-	a_histsPullFitCorr[i] = particleHists(v_names[i],"FitCorr");	 
-}
-
 // Loop over all entries and perform fit
-for(int i=0; i<N; i++){
-
-	tIn->GetEntry(i);
-	
-	// first only look at none empty entries:
-	if(topevent->recoB1.empty() || topevent->fitW2Prod2.empty() || topevent->fitW2Prod1.empty() || topevent->fitW1Prod2.empty() || topevent->fitW1Prod1.empty() || topevent->fitB2.empty() || topevent->fitB1.empty() || topevent->recoW2Prod2.empty() || topevent->recoW2Prod1.empty() || topevent->recoW1Prod2.empty() || topevent->recoW1Prod1.empty() || topevent->recoB2.empty()){
-	N_empty++;
-	} 
-
-	else{
-	N_full++;
 	// create new TKinFitter
 	TKinFitter * fitter_ = new TKinFitter("TopKinFitter","TopKinFitter");
 	fitter_->setMaxNbIter(200);
