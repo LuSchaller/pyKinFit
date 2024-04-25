@@ -2,8 +2,6 @@
 #include "PhysicsTools/KinFitter/interface/TFitConstraintM.h"
 #include "PhysicsTools/KinFitter/interface/TFitParticleEtEtaPhi.h"
 #include "PhysicsTools/KinFitter/interface/TKinFitter.h"
-#include "TopMass/TopEventTree/interface/JetEvent.h"
-#include "TopMass/TopEventTree/interface/TopEvent.h"
 #include "addExtraJets.h"
 #include "config.h"
 #include "matching.h"
@@ -21,6 +19,8 @@
 struct Selection {
     double chi2;
     vector<TLorentzVector *> bestPermutation;
+    vector<TLorentzVector *> fitJets;
+    int combinationType;
 };
 
 TMatrixD setupMatrix(const TLorentzVector *object, bool isB) {
@@ -48,14 +48,15 @@ TMatrixD setupMatrix(const TLorentzVector *object1, const TLorentzVector *object
     CovM(2, 2) = pow(CalcPhi(et1, eta1, isB), 2) + pow(CalcPhi(et2, eta2, isB), 2);
     return CovM;
 }
-void applyKinFit(vector<TLorentzVector *> jetSelection, JetEvent *jetevent, TopEvent *topevent, vector<TMatrixD> decayprodmats, struct Selection &currentSelection, double dRLimit, TString option) {
+void applyKinFit(vector<TLorentzVector *> jetSelection, vector<TMatrixD> decayprodmats, struct Selection &currentSelection, double dRLimit, TString option) {
     // create new TKinFitter
     TKinFitter *fitter_ = new TKinFitter("TopKinFitter", "TopKinFitter");
     fitter_->setMaxNbIter(200);
     fitter_->setMaxDeltaS(5e-5);
     fitter_->setMaxF(1e-4);
     fitter_->setVerbosity(0);
-    // extract TLorentzVectors in case we want to keep them, but without clear fit seems to go wrong
+
+    // definiton of covariance matrices
     TMatrixD mB1 = decayprodmats[0];
     TMatrixD mB2 = decayprodmats[1];
     TMatrixD mW1P1 = decayprodmats[2];
@@ -63,24 +64,21 @@ void applyKinFit(vector<TLorentzVector *> jetSelection, JetEvent *jetevent, TopE
     TMatrixD mW2P1 = decayprodmats[4];
     TMatrixD mW2P2 = decayprodmats[5];
 
+    /* this would be for dealing with additional (<6) jets
     std::map<TLorentzVector *, TMatrixD> decayprodmap;
-    // definiton of covariance matrices
     decayprodmap.insert({jetSelection[0], mB1});
     decayprodmap.insert({jetSelection[1], mB2});
     decayprodmap.insert({jetSelection[2], mW1P1});
     decayprodmap.insert({jetSelection[3], mW1P2});
     decayprodmap.insert({jetSelection[4], mW2P1});
     decayprodmap.insert({jetSelection[5], mW2P2});
-    vector<TLorentzVector *> jets;
-    for (size_t i = 0; i < jetevent->jet.size(); i++) {
-	TLorentzVector *jet = &(jetevent->jet[i]);
-	jets.push_back(jet);
-    }
-    TLorentzVector addedjettodel;
+    vector<TLorentzVector *> extraJets;
+   TLorentzVector addedjettodel;
     bool addevent = false;
 
     //cout << "All Pt pre Add : ";
-    for (TLorentzVector *jet : jets) {
+    
+    for (TLorentzVector *jet : extraJets) {
 	bool matched = false;
 	for (const auto &decayprod : decayprodmap) {
 	    //	cout <<"DecayProd : " <<  decayprod.first->Pt()<< " jEt : " << jet->Pt() ;
@@ -102,6 +100,7 @@ void applyKinFit(vector<TLorentzVector *> jetSelection, JetEvent *jetevent, TopE
 	    addevent = true;
 	}
     }
+    */
     // setup jetSelection and add to fitter_
     auto B1 = new TFitParticleEtEtaPhi("B1", "B1", jetSelection[0], &mB1);
     auto B2 = new TFitParticleEtEtaPhi("B2", "B2", jetSelection[1], &mB2);
@@ -135,17 +134,24 @@ void applyKinFit(vector<TLorentzVector *> jetSelection, JetEvent *jetevent, TopE
     // ourfit has the newly fitted TLorentzvectors of the particles as entries, the order is the same
     // order the particles have been added to the fitter (B1,B2, W1Prod1, W1Prod2, W2Prod1, W2Prod2)
 
-    // overwrite the values in top.fit* branch and fill pull histograms
 
     // if fit didnt converge empty all top.reco vectors
     double thisChi2 = fitter_->getS();
     if (thisChi2 < currentSelection.chi2 && fitter_->getStatus() == 0) {
-	if (addevent)
-	    jetevent->jet.erase(std::find(jetevent->jet.begin(), jetevent->jet.end(), addedjettodel));
-	currentSelection.chi2 = thisChi2;
-
-	currentSelection.bestPermutation = jetSelection;
+	    currentSelection.chi2 = thisChi2;
+	    currentSelection.bestPermutation = jetSelection;
+	    // add fitted jets to vector in order (B1,B2,W1Prod1,W1Prod2, W2Prod1, W2Prod2, W1, W2, Top1, Top2, TTBar)
+	    for(int i=0 , i<6 , i++){
+	     currentSelection.fitJets[i] = *(fitter->get4Vec(i);
+	    }
+	currentSelection.fitJets[6] = currentSelection.fitJets[2] + currentSelection.fitJets[3];
+	    currentSelection.fitJets[7] = currentSelection.fitJets[4] + currentSelection.fitJets[5];
+	    currentSelection.fitJets[8] = currentSelection.fitJets[6] + currentSelection.fitJets[0];
+	    currentSelection.fitJets[9] = currentSelection.fitJets[7] + currentSelection.fitJets[1];
+	    currentSelection.fitJets[10] = currentSelection.fitJets[8] + currentSelection.fitJets[9]:
+	    }
 	// overwrite reco if we find a better combination
+	/* since we no longer deal with root files this is commented out
 	topevent->recoB1.resize(1);
 	topevent->recoB2.resize(1);
 	topevent->recoW1Prod1.resize(1);
@@ -189,7 +195,7 @@ void applyKinFit(vector<TLorentzVector *> jetSelection, JetEvent *jetevent, TopE
 	topevent->fitChi2[0] = fitter_->getS();
 	topevent->fitProb[0] = TMath::Prob(fitter_->getS(), fitter_->getNDF());
     }
-    /*vector<TLorentzVector *> genJets;
+    vector<TLorentzVector *> genJets;
     vector<TLorentzVector *> Jets;
     for (size_t ip = 0; ip < jetevent->genParton.size(); ip++)
 	genJets.push_back(&(jetevent->genParton[ip]));
