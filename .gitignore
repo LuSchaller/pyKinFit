@@ -35,3 +35,5 @@ data
 .law
 .setups
 cpplibs
+OGKinFit
+pybindtest
