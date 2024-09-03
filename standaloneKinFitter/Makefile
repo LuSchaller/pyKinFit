@@ -1,0 +1,3 @@
+pyfitAssignment:
+	c++ -ggdb3 -O3 -Wall -shared -std=c++11 -fPIC -I/afs/desy.de/user/s/schaller/HiWi/topmass-alljets-kinfit/data/software/conda/include/python3.9 -I/afs/desy.de/user/s/schaller/HiWi/topmass-alljets-kinfit/data/software/venvs/cf_5de7213c/lib/python3.9/site-packages/pybind11/include pyKinFitTest.cc -o pyKinFitTest.so -L/usr/lib64/root -L/afs/desy.de/user/s/schaller/HiWi/topmass-alljets-kinfit/standaloneKinFitter/lib/Linux514_x86_64_gcc485/6.24.06 -L/cvmfs/cms.cern.ch/slc7_amd64_gcc530/cms/cmssw/CMSSW_8_0_27/lib/slc7_amd64_gcc530 -L/cvmfs/cms.cern.ch/slc7_amd64_gcc530/cms/cmssw/CMSSW_8_0_27/external/slc7_amd64_gcc530/lib -lCore -lMatrix -lPhysics -lTKinFitter
+#	-L/usr/lib64 	-L/usr/lib64/root 
