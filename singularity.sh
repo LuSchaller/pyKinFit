@@ -1,0 +1,1 @@
+singularity shell --contain --bind /afs:/afs --bind /nfs:/nfs --bind /pnfs:/pnfs --bind /cvmfs:/cvmfs --bind /var/lib/condor:/var/lib/condor /cvmfs/unpacked.cern.ch/registry.hub.docker.com/rootproject/root:6.24.06-centos7
