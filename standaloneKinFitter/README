@@ -2,3 +2,9 @@ KinFitter - A Kinematic Fit with Constraints
 
 Wiki: https://github.com/goepfert/KinFitter/wiki/KinFitter---A-Kinematic-Fit-with-Constraints
 Documentation: http://www.iktp.tu-dresden.de/~goepfert/KinFitter.pdf
+
+
+To run: 
+    source singularity.sh
+    source /data/software/venvs/cf_5de7213c/bin/activate
+    source /standaloneKinFitter/path.sh
