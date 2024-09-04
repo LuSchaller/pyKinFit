@@ -47,7 +47,7 @@ TMatrixD setupMatrix(const TLorentzVector *object1, const TLorentzVector *object
 
 
 
-void applyKinFit(vector<TLorentzVector *> jetSelection, vector<TMatrixD> decayprodmats){
+void applyKinFit(vector<TLorentzVector *> jetSelection, vector<TMatrixD> decayprodmats, struct Selection &currentSelection){
 
     TKinFitter *fitter_ = new TKinFitter("TopKinFitter", "TopKinFitter");
     fitter_->setMaxNbIter(200);
@@ -66,7 +66,6 @@ void applyKinFit(vector<TLorentzVector *> jetSelection, vector<TMatrixD> decaypr
 
 
 
-cout << "B1 PRE : " << jetSelection[0]->Pt();
 
 
     auto B1 = new TFitParticlePtEtaPhi("B1", "B1", jetSelection[0], &mB1);
@@ -98,9 +97,25 @@ cout << "B1 PRE : " << jetSelection[0]->Pt();
     // perform fit
     fitter_->fit();
 
-    cout << "Chi2 " << fitter_->getS() << " " ;
-      cout <<" B1 Pre: " << jetSelection[0]->Pt() << " B1 Fit: " << fitter_->get4Vec(0)->Pt() ;
-      cout <<" B2 Pre: " << jetSelection[1]->Pt() << " B2 Fit: " << fitter_->get4Vec(1)->Pt() ;
+
+ double thisChi2 = fitter_->getS();
+    if (thisChi2 < currentSelection.chi2 && fitter_->getStatus() == 0) {
+	    currentSelection.chi2 = thisChi2;
+	    currentSelection.bestPermutation = jetSelection;
+	    // add fitted jets to vector in order (B1,B2,W1Prod1,W1Prod2, W2Prod1, W2Prod2, W1, W2, Top1, Top2, TTBar)
+	    for(int i=0 ; i<6 ; i++){
+	     currentSelection.fitJets[i] = *(fitter_->get4Vec(i));
+	    }
+	currentSelection.fitJets[6] = currentSelection.fitJets[2] + currentSelection.fitJets[3];
+	    currentSelection.fitJets[7] = currentSelection.fitJets[4] + currentSelection.fitJets[5];
+	    currentSelection.fitJets[8] = currentSelection.fitJets[6] + currentSelection.fitJets[0];
+	    currentSelection.fitJets[9] = currentSelection.fitJets[7] + currentSelection.fitJets[1];
+	    currentSelection.fitJets[10] = currentSelection.fitJets[8] + currentSelection.fitJets[9];
+	    }
+cout << "Status : " << fitter_->getStatus() << endl;
+    cout << "Chi2 " << fitter_->getS() << " " << endl;
+      cout <<" B1 Pre: " << jetSelection[0]->Pt() << " B1 Fit: " << fitter_->get4Vec(0)->Pt() << endl;
+      cout <<" B2 Pre: " << jetSelection[1]->Pt() << " B2 Fit: " << fitter_->get4Vec(1)->Pt() << endl;
    // fitter_->print();
 
 
@@ -112,6 +127,15 @@ cout << "B1 PRE : " << jetSelection[0]->Pt();
 	delete c;
 }
 
+void tryCombinations(TLorentzVector *B1, TLorentzVector *B2, TLorentzVector *J1, TLorentzVector *J2, TLorentzVector *J3, TLorentzVector *J4, TMatrixD mB1, TMatrixD mB2, TMatrixD mJ1, TMatrixD mJ2, TMatrixD mJ3, TMatrixD mJ4, struct Selection &bestSelection) {
+
+    applyKinFit({B1, B2, J1, J2, J3, J4}, {mB1, mB2, mJ1, mJ2, mJ3, mJ4}, bestSelection);
+    applyKinFit({B1, B2, J1, J3, J2, J4}, {mB1, mB2, mJ1, mJ3, mJ2, mJ4}, bestSelection);
+    applyKinFit({B1, B2, J1, J4, J2, J3}, {mB1, mB2, mJ1, mJ4, mJ2, mJ3}, bestSelection);
+    applyKinFit({B1, B2, J3, J4, J1, J2}, {mB1, mB2, mJ3, mJ4, mJ1, mJ2}, bestSelection);
+    applyKinFit({B1, B2, J2, J4, J1, J3}, {mB1, mB2, mJ2, mJ4, mJ1, mJ3}, bestSelection);
+    applyKinFit({B1, B2, J2, J3, J1, J4}, {mB1, mB2, mJ2, mJ3, mJ1, mJ4}, bestSelection);
+}
 
 void setBestCombi(vector<vector<double>> inputdata, vector<vector<double>> gendata){
     
@@ -126,6 +150,8 @@ void setBestCombi(vector<vector<double>> inputdata, vector<vector<double>> genda
     vector<double> genphi = gendata[2];
     vector<double> genM = gendata[3];
 
+    	struct Selection bestSelection;
+	    bestSelection.chi2 = 10000;
 
 	vector<TLorentzVector *> jets;
 	for (size_t i = 0; i < inputdata[0].size(); i++) {
@@ -158,7 +184,7 @@ void setBestCombi(vector<vector<double>> inputdata, vector<vector<double>> genda
 	TMatrixD mJ4 = setupMatrix(J4, false);
 vector<TMatrixD> decayprodmats = {mB1,mB2,mJ1,mJ2,mJ3,mJ4};
 
-applyKinFit(jets,decayprodmats);
+    tryCombinations(B1,B2,J1,J2,J3,J4,mB1,mB2,mJ1,mJ2,mJ3,mJ4, bestSelection);
 
 
 
