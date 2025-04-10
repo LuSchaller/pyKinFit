@@ -1,4 +1,7 @@
 #!/usr/bin/bash
-export LD_LIBRARY_PATH=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/lib/Linux514_x86_64_gcc485/6.24.06/:$LD_LIBRARY_PATH
-#export LD_PRELOAD=/usr/lib64/libtbb.so.2:/usr/lib64/libfreetype.so.6:$LD_PRELOAD
-export CPLUS_INCLUDE_PATH=/usr/include/:/usr/include/root/:cvmfs/cms.cern.ch/slc7_amd64_gcc530/lcg/root/6.06.00-ikhhed/include/:/cvmfs/cms.cern.ch/slc7_amd64_gcc530/cms/cmssw/CMSSW_8_0_27/src/:$(dirname "$(readlink -f "${BASH_SOURCE[0]}")"):/usr/include/:/usr/include/root/:/usr/include/c++/11/:$CPLUS_INCLUDE_PATH
+export LD_LIBRARY_PATH=/afs/desy.de/user/s/schaller/HiWi/topmass-alljets-kinfit/standaloneKinFitter/lib/el9_amd64_gcc12/6.26.11/:/cvmfs/cms.cern.ch/el9_amd64_gcc12/cms/cmssw/CMSSW_13_3_0/external/el9_amd64_gcc12/lib/:$LD_LIBRARY_PATH
+#/usr/lib64/root:
+export LD_PRELOAD=/cvmfs/cms.cern.ch/el9_amd64_gcc12/external/gcc/12.3.1-40d504be6370b5a30e3947a6e575ca28/lib64/libstdc++.so.6
+#:/cvmfs/cms.cern.ch/el9_amd64_gcc12/cms/cmssw/CMSSW_13_3_0/external/el9_amd64_gcc12/lib/libNet.so
+#/cvmfs/cms.cern.ch/el9_amd64_gcc12/cms/cmssw/CMSSW_13_3_1/lib/el9_amd64_gcc12/
+export PYTHONPATH=/afs/desy.de/user/s/schaller/HiWi/topmass-alljets-kinfit/standaloneKinFitter/:$PYTHONPATH
