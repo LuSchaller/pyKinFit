@@ -6,8 +6,8 @@ Documentation: http://www.iktp.tu-dresden.de/~goepfert/KinFitter.pdf
 
 Setup:
 source your columnflow setup.sh
-if pybind11 is not installed do
-pip install pybind11
 make
+add /lib/.../6.26.11/ to your LD_LIBRARY_PATH
+export LD_PRELOAD=/cvmfs/cms.cern.ch/el9_amd64_gcc12/external/gcc/12.3.1-40d504be6370b5a30e3947a6e575ca28/lib64/libstdc++.so.6
 in Python:
 import pyKinFit
