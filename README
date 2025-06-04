@@ -5,7 +5,9 @@ Wiki: https://github.com/goepfert/KinFitter/wiki/KinFitter---A-Kinematic-Fit-wit
 Documentation: http://www.iktp.tu-dresden.de/~goepfert/KinFitter.pdf
 
 Setup:
-
-First setup columnflow!
+source your columnflow setup.sh
+if pybind11 is not installed do
+pip install pybind11
 make
+in Python:
 import pyKinFit
