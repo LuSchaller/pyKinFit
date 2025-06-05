@@ -15,6 +15,7 @@ cd pyKinFit
 make
 ```
 Edit the paths in path.sh or manually export the environment variables  
+  
 in Python:
 ```
 import pyKinFit
