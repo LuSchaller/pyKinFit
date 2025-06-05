@@ -5,12 +5,16 @@ Wiki: https://github.com/goepfert/KinFitter/wiki/KinFitter---A-Kinematic-Fit-wit
 Documentation: http://www.iktp.tu-dresden.de/~goepfert/KinFitter.pdf
 
 # Setup:
-setup your python environment
+Clone the repo:
+```bash
+git clone git@github.com:LuSchaller/pyKinFit.git
+```
+Then setup your python environment and do
 ```bash
 cd pyKinFit
 make
 ```
-edit path.sh according to the comments
+Edit the paths in path.sh or manually export the environment variables  
 in Python:
 ```
 import pyKinFit
@@ -20,4 +24,5 @@ You can execute
 ```bash
 python3 cfest.py
 ```
-to confirm everything works
+to confirm everything works:w
+
