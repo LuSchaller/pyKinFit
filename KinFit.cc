@@ -15,6 +15,7 @@ using std::vector;
 struct Selection {
 public:
   double chi2;
+  double pgof;
   vector<TLorentzVector *> bestPermutation;
   vector<double> fitJetpt;
   vector<double> fitJeteta;
@@ -112,6 +113,7 @@ void applyKinFit(vector<TLorentzVector *> jetSelection,
     // std::cout << " Fit converged !" << std::endl;
     currentSelection.chi2 = thisChi2;
     currentSelection.bestPermutation = jetSelection;
+    currentSelection.pgof = TMath::Prob(thisChi2, fitter_->getNDF());
     // add fitted jets to vectors in order (B1,B2,W1Prod1,W1Prod2, W2Prod1,
     // W2Prod2, W1, W2, Top1, Top2, TTBar)
     for (int i = 0; i < 6; i++) {
@@ -155,7 +157,7 @@ void tryCombinations(TLorentzVector *B1, TLorentzVector *B2, TLorentzVector *J1,
 vector<vector<double>>, vector<vector<double>>, vector<vector<double>>>*/
 std::tuple<vector<vector<double>>, vector<vector<double>>,
            vector<vector<double>>, vector<vector<double>>, vector<vector<int>>,
-           vector<double>>
+           vector<double>, vector<double>>
 setBestCombi(
     vector<vector<double>> inputpt, vector<vector<double>> inputeta,
     vector<vector<double>> inputphi,
@@ -172,6 +174,7 @@ vector<double> genM = gendata[3];
   vector<vector<double>> outputm(inputpt.size());
   vector<vector<int>> indexmask(inputpt.size());
   vector<double> outputchi2(inputpt.size());
+  vector<double> outputpgof(inputpt.size());
   // vector<vector<TLorentzVector>> outputfitJets(inputpt.size());
 
   vector<TLorentzVector *> jets;
@@ -237,6 +240,7 @@ vector<double> genM = gendata[3];
     outputm[i] = bestSelection.fitJetM;
     indexmask[i] = indices;
     outputchi2[i] = bestSelection.chi2;
+    outputpgof[i] = bestSelection.pgof;
     //  cout << "Fit PT : " << outputpt[i][0] << "Fit eta : " << outputeta[i][0]
     //  << endl;
   }
@@ -255,5 +259,5 @@ vector<TLorentzVector *> genJets;
   // for (auto d : genJets)
   //    delete d;
   return std::make_tuple(outputpt, outputeta, outputphi, outputm, indexmask,
-                         outputchi2);
+                         outputchi2, outputpgof);
 }
